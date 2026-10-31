@@ -2,7 +2,8 @@
 
 ## Disclaimer - Do not try this on a system you are not authorized to test on as you could get into legal trouble. Never do what I show you on somebodies' system without explicit approval. I am not responsible for what you do with this knowledge.
 
-## Objective: Gain root/SYSTEM access to the machine.
+## Objective: 
+Gain root/SYSTEM access to the machine.
 
 Butler VM Pentest walkthrough
 
