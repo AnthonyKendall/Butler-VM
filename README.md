@@ -1,14 +1,26 @@
 ## Butler VM Pentest walkthrough
 
-## Disclaimer:
+## Disclaimer
 Do not try this on a system you are not authorized to test on as you could get into legal trouble. Never do what I show you on somebodies' system without explicit approval. I am not responsible for what you do with this knowledge.
 
-## Objective: 
+## Objective
 Gain root/SYSTEM access to the machine.
 
-Butler VM Pentest walkthrough
+## Skills Learned
 
-Disclaimer — Do not try this on a system you are not authorized to test on as you could get into legal trouble. Never do what I show you on somebodies’ system without explicit approval. I am not responsible for what you do with this knowledge.
+· How to brute force with Burpsuite and Metasploit
+· Unquoted service path exploit
+· Msfvenom payload creation
+· meterpreter reverse shell connection
+
+## Conclusion
+
+Through the use of OSINT and nmap, I was able to discover that there was a Jenkins server hosted on port 8080 and from there, I was able to brute force my way in with Burpsuite and Metasploit using common names and passwords that the community typically recommends for Jenkins. Once I was able to login, I was able to run a Groovy reverse Java shell back to my Kali box and from there, I ran winpeas.exe which looked for any area for privilege escalation. Through the results, it was found that there was a unquoted service path that I leveraged with the user of msfvenom and creating a meterpreter session on the system. After I was on the system, I gathered the hostname and other information about the system. After I did my recon on the system, I found the unquoted service path and transferred my msfvenom payload over to the windows system hosting Jenkins with certutil. Once the file was uploaded, I ran it and got the reverse shell back to my kali box. From there, I did a hashdump and collected the hashes of the users on the system and was able to login to the Administrator account with a pass the hash technique.
+
+## How to secure the system
+
+The first issue was that the Jenkins automation server had very basic credentials. So, the first change would be to implement a strong password policy for the company to ensure strong, unique and not duplicated passwords are being used. This would have been it, everything else happened only because I was able to get into the automation server with weak creds.
+
 
 The first thing we need to discover is the IP of the victim's machine. To do this, we need to run the command “netdisocver” 
 
