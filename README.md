@@ -9,8 +9,11 @@ Gain root/SYSTEM access to the machine.
 ## Skills Learned
 
 · How to brute force with Burpsuite and Metasploit
+
 · Unquoted service path exploit
+
 · Msfvenom payload creation
+
 · meterpreter reverse shell connection
 
 ## Conclusion
