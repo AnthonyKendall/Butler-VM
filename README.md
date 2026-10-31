@@ -25,6 +25,8 @@ Through the use of OSINT and nmap, I was able to discover that there was a Jenki
 The first issue was that the Jenkins automation server had very basic credentials. So, the first change would be to implement a strong password policy for the company to ensure strong, unique and not duplicated passwords are being used. This would have been it, everything else happened only because I was able to get into the automation server with weak creds.
 
 
+## Walkthrough 
+
 The first thing we need to discover is the IP of the victim's machine. To do this, we need to run the command “netdisocver” 
 
 Command — “sudo netdiscover -r 192.168.44.0/24”
